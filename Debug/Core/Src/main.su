@@ -1,0 +1,10 @@
+../Core/Src/main.c:95:5:main	8	static
+../Core/Src/main.c:192:6:SystemClock_Config	72	static
+../Core/Src/main.c:229:13:MX_SPI1_Init	8	static
+../Core/Src/main.c:267:13:MX_GPIO_Init	32	static
+../Core/Src/main.c:304:6:StartMotorControl	16	static
+../Core/Src/main.c:322:6:StartPositionFeedback	16	static
+../Core/Src/main.c:340:6:StartStepGenerator	16	static
+../Core/Src/main.c:358:6:StartCommandInterface	16	static
+../Core/Src/main.c:377:6:HAL_TIM_PeriodElapsedCallback	16	static
+../Core/Src/main.c:395:6:Error_Handler	4	static,ignoring_inline_asm
