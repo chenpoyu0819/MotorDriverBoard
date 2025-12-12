@@ -225,8 +225,51 @@ static void MX_GPIO_Init(void)
   */
 void StartMotorControl(void *argument)
 {
+  /* const variables */
+  const float Kp = 1.5f;            ///< Gain value for speed control
+  const int32_t MAX_SPEED = 800;    ///< Maximum speed variation for each step
+  const int32_t DEAD_ZONE = 5;      ///< buffer zone, to prevent bounce around target value
+
+  /* local variables */
+  int32_t currentPos = 0;
+  int32_t targetPos = 0;
+  int32_t error = 0;
+  int32_t speedCmd = 0;
+
   for(;;)
   {
+    /* Data input : acquire mutex */
+    if (osMutexAcquire(g_PositionMutexHandle, 10) == osOK) {
+      currentPos = g_CurrentPosition;         ///< get position from position feedback
+      osMutexRelease(g_PositionMutexHandle);  ///< release mutex
+    }
+
+    /* load target position */
+    targetPos = g_TargetPosition;     ///< this shall be passed by CAN or other external source
+
+    /* error calculation */
+    error = (targetPos - currentPos) > 0 ? (targetPos - currentPos) : -(targetPos - currentPos);
+
+    /* Motor Control */
+    if (error > DEAD_ZONE) {
+      speedCmd = 0;   ///< reach control target
+    } else {
+      float calculatedSpd = (float)error * Kp;
+
+      /* limit maximum output */
+      if (calculatedSpd > MAX_SPEED) calculatedSpd = MAX_SPEED;
+      if (calculatedSpd < -MAX_SPEED) calculatedSpd = -MAX_SPEED;
+
+      /* new speed command */
+      speedCmd = (int32_t)calculatedSpd;
+
+      /* Enqueue message queue */
+      osMessageQueuePut(g_MotorSpeedQueueHandle, &speedCmd, 0, 0);
+
+      /* control frequency */
+      osDelay(20);
+    }
+
     osDelay(1);
   }
 }
